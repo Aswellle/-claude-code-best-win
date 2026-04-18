@@ -1,0 +1,35 @@
+{
+  "name": "claude-code-best",
+  "description": "Claude Code Best CLI — pkg packaging config (standalone, does not modify root package.json)",
+  "pkg": {
+    "scripts": [],
+    "assets": [
+      "dist/**/*",
+      "vendor/audio-capture/x64-win32/*.node",
+      "vendor/audio-capture/arm64-win32/*.node"
+    ],
+    "targets": [
+      "node18-win-x64"
+    ],
+    "outputPath": "packaging/output"
+  },
+  "_comment_targets": [
+    "Primary target: node18-win-x64 (ESM support requires node18+)",
+    "Fallback target if node18 fails: node20-win-x64",
+    "node22-win-x64 is also valid but larger binary",
+    "Cross-compile targets (not tested): node18-win-arm64, node18-linux-x64, node18-macos-x64"
+  ],
+  "_comment_esm": [
+    "dist/cli.js is ESM (Bun target: bun, post-processed for Node.js compat).",
+    "dist/cli-node.js is the Node.js shebang wrapper: import './cli.js'",
+    "pkg must bundle dist/cli-node.js as the entry, NOT dist/cli.js directly,",
+    "because pkg resolves ESM re-exports correctly through the wrapper.",
+    "pkg entry is specified via CLI: pkg dist/cli-node.js --config packaging/pkg-config.json"
+  ],
+  "_comment_assets": [
+    "dist/**/* captures all ~450 chunk .js files alongside cli.js",
+    "vendor/audio-capture/*.node are the pre-built native audio capture addons",
+    "color-diff-napi and image-processor-napi ship as TypeScript source (no prebuilt .node),",
+    "so they are bundled into dist/cli.js by Bun at build time — no extra asset needed."
+  ]
+}

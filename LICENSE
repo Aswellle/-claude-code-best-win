@@ -1,0 +1,143 @@
+CLAUDE CODE BEST — WINDOWS PACKAGING
+Non-Commercial Research Distribution License
+
+================================================================================
+SECTION 1 — INTELLECTUAL PROPERTY OWNERSHIP
+================================================================================
+
+This repository contains or derives from software that involves three distinct
+layers of intellectual property:
+
+1. ANTHROPIC ORIGINAL WORK
+   Claude Code is a product of Anthropic, PBC. The original Claude Code CLI
+   software, including all source code, algorithms, system prompts, tool
+   definitions, and compiled artifacts, is the exclusive intellectual property
+   of Anthropic, PBC. Anthropic retains all rights thereto. This project does
+   not claim any ownership over Anthropic's original work.
+
+   Official product: https://www.anthropic.com/claude-code
+   Anthropic website: https://www.anthropic.com
+
+2. UPSTREAM COMMUNITY WORK (claude-code-best)
+   The decompiled/reverse-engineered source restoration in this codebase was
+   originally undertaken by the claude-code-best community
+   (https://github.com/claude-code-best/claude-code). Their work — including
+   source restoration, module reconstruction, feature unlocking, and
+   third-party API compatibility layers — is attributed to the contributors
+   of that project. This repository builds upon their publicly available work.
+
+3. WINDOWS PACKAGING CONTRIBUTION (this repository)
+   The following files in the packaging/ directory were independently authored
+   by the maintainer of this repository and represent original creative work:
+
+     packaging/build-compile.ts     — Bun compile automation script
+     packaging/build-exe.ps1        — Full pipeline orchestration script
+     packaging/launcher.ps1         — Windows Terminal launcher (ps2exe)
+     packaging/installer.iss        — Inno Setup installer configuration
+     packaging/pkg-config.json      — Build configuration reference
+     packaging/README.md            — Packaging documentation
+
+   These files, and only these files, are the original contribution of this
+   repository's maintainer.
+
+================================================================================
+SECTION 2 — PERMITTED USES
+================================================================================
+
+Subject to the restrictions in Section 3, you are permitted to:
+
+a) PERSONAL USE: Use the software solely for personal, non-commercial purposes,
+   including personal productivity and personal AI-assisted development.
+
+b) LEARNING AND RESEARCH: Study the source code to understand Claude Code's
+   architecture, Bun runtime compilation, Windows packaging techniques, or
+   AI CLI design patterns, for non-commercial research purposes.
+
+c) FORK AND MODIFICATION: Fork this repository and modify the packaging scripts
+   (Section 1.3 files) for your own non-commercial purposes, provided you
+   retain all copyright notices and attribution.
+
+d) ACADEMIC CITATION: Reference this project in academic or educational
+   contexts with proper attribution.
+
+================================================================================
+SECTION 3 — PROHIBITED USES
+================================================================================
+
+The following uses are expressly prohibited:
+
+a) COMMERCIAL USE: You may not use, sell, license, sublicense, or otherwise
+   exploit this software or any derivative for commercial gain, including but
+   not limited to: selling access, integrating into paid products, offering
+   as a paid service, or using in a commercial production environment.
+
+b) IMPERSONATION OF OFFICIAL PRODUCT: You may not represent, market, or
+   distribute this software as an official Anthropic product or official
+   Claude Code release. All distributions must clearly identify the software
+   as unofficial and community-maintained.
+
+c) REMOVAL OF ATTRIBUTION: You may not remove, obscure, or alter the copyright
+   notices in Section 1, the Anthropic attribution, the upstream community
+   attribution, or this license notice in any distributed copy.
+
+d) REDISTRIBUTION OF BINARIES WITHOUT NOTICE: If you redistribute pre-built
+   executable files derived from this project, you must include this LICENSE
+   file and a visible disclaimer that the software is not affiliated with
+   Anthropic, PBC.
+
+e) CIRCUMVENTION CLAIMS: You may not market this software as a means to
+   circumvent Anthropic's subscription, billing, or access control systems.
+   This software requires a valid Anthropic API key and operates within
+   Anthropic's API terms of service.
+
+================================================================================
+SECTION 4 — DISCLAIMER OF WARRANTIES AND LIABILITY
+================================================================================
+
+THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
+
+IN NO EVENT SHALL THE MAINTAINER OF THIS REPOSITORY BE LIABLE FOR ANY CLAIM,
+DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR
+OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE
+OR OTHER DEALINGS IN THE SOFTWARE.
+
+THE MAINTAINER MAKES NO REPRESENTATION THAT THIS SOFTWARE COMPLIES WITH THE
+TERMS OF SERVICE OF ANTHROPIC, PBC, OR ANY APPLICABLE LAW. USE AT YOUR OWN
+RISK.
+
+================================================================================
+SECTION 5 — THIRD-PARTY LICENSES
+================================================================================
+
+This compiled software embeds the Bun JavaScript runtime:
+  Bun is licensed under the MIT License.
+  Copyright (c) 2022 Jarred Sumner / Oven GmbH
+  https://github.com/oven-sh/bun/blob/main/LICENSE.md
+
+The Windows installer is built with Inno Setup:
+  Inno Setup is licensed under its own open-source license.
+  Copyright (c) 1997-2024 Jordan Russell
+  https://jrsoftware.org/files/is/license.txt
+
+The launcher executable is compiled with ps2exe:
+  ps2exe is licensed under the Microsoft Public License (Ms-PL).
+  https://github.com/MScholtes/PS2EXE
+
+================================================================================
+SECTION 6 — GOVERNING INTENT
+================================================================================
+
+This project exists for the sole purpose of enabling Windows users to run
+Claude Code in a native Windows executable format, for personal learning and
+research. The maintainer respects Anthropic's intellectual property and
+encourages users to support Anthropic's official products.
+
+If you are an Anthropic representative and have concerns about this project,
+please contact the maintainer directly via GitHub Issues before initiating
+a formal takedown process.
+
+================================================================================
+Last updated: 2025
+================================================================================
