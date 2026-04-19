@@ -68,10 +68,13 @@ if (-not $WtExe) {
 #   wt.exe --title "Claude Code Best" cmd /k "D:\path with spaces\claude-core.exe"
 
 if ($WtExe) {
+    # Double-double-quote pattern: cmd /k ""exe with spaces"" args
+    # cmd.exe strips the outer "" pair, leaving properly-quoted inner "exe" for execution.
+    # Without this, cmd.exe sees: D:\Git Clone\... and splits at the first space.
     if ($ArgString -ne '') {
-        $WtArgs = "--title `"$WindowTitle`" cmd /k `"$CoreExe`" $ArgString"
+        $WtArgs = "--title `"$WindowTitle`" cmd /k `"`"$CoreExe`" $ArgString`""
     } else {
-        $WtArgs = "--title `"$WindowTitle`" cmd /k `"$CoreExe`""
+        $WtArgs = "--title `"$WindowTitle`" cmd /k `"`"$CoreExe`"`""
     }
     Start-Process -FilePath $WtExe -ArgumentList $WtArgs
     exit 0
@@ -81,9 +84,9 @@ if ($WtExe) {
 $CmdExe = "$env:SystemRoot\System32\cmd.exe"
 if (Test-Path $CmdExe -PathType Leaf) {
     if ($ArgString -ne '') {
-        Start-Process -FilePath $CmdExe -ArgumentList "/k `"$CoreExe`" $ArgString"
+        Start-Process -FilePath $CmdExe -ArgumentList "/k `"`"$CoreExe`" $ArgString`""
     } else {
-        Start-Process -FilePath $CmdExe -ArgumentList "/k `"$CoreExe`""
+        Start-Process -FilePath $CmdExe -ArgumentList "/k `"`"$CoreExe`"`""
     }
 } else {
     Start-Process -FilePath $CoreExe -ArgumentList ($quoted -join ' ')
