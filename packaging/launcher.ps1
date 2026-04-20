@@ -44,22 +44,36 @@ while ($i -lt $PassArgs.Count) {
 }
 $ArgString = $quotedArgs -join ' '
 
-# ── Find wt.exe ───────────────────────────────────────────────────────────────
+# ── Find wt.exe (Windows Terminal) ───────────────────────────────────────────
+# Prefer Windows Terminal for better rendering (GPU-accelerated, ligatures, etc.)
 $WtExe = $null
 
+# 1. PATH lookup
 $WtGcm = Get-Command 'wt.exe' -ErrorAction SilentlyContinue
 if ($WtGcm) { $WtExe = $WtGcm.Source }
 
+# 2. App-execution alias (reparse point — must NOT use -PathType Leaf)
 if (-not $WtExe) {
     $p = "$env:LOCALAPPDATA\Microsoft\WindowsApps\wt.exe"
-    if (Test-Path $p -PathType Leaf) { $WtExe = $p }
+    if (Test-Path $p) { $WtExe = $p }
 }
 
+# 3. Packaged app under Program Files
 if (-not $WtExe) {
     $p = Get-Item "$env:ProgramFiles\WindowsApps\Microsoft.WindowsTerminal*\wt.exe" `
-         -ErrorAction SilentlyContinue | Select-Object -First 1
+         -ErrorAction SilentlyContinue | Sort-Object Name -Descending | Select-Object -First 1
     if ($p) { $WtExe = $p.FullName }
 }
+
+# ── Prefer pwsh (PowerShell 7) inside WT for best rendering ──────────────────
+$ShellExe = $null
+$ShellCmd = Get-Command 'pwsh.exe' -ErrorAction SilentlyContinue
+if ($ShellCmd) {
+    $ShellExe = $ShellCmd.Source
+} else {
+    $ShellExe = "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe"
+}
+$ShellName = if ($ShellExe -match 'pwsh') { 'pwsh' } else { 'powershell' }
 
 # ── Build PowerShell -EncodedCommand payload ──────────────────────────────────
 #
@@ -81,17 +95,16 @@ $PsCmdBytes   = [System.Text.Encoding]::Unicode.GetBytes($PsCommand)
 $PsCmdEncoded = [System.Convert]::ToBase64String($PsCmdBytes)
 
 # ── Launch ────────────────────────────────────────────────────────────────────
-$PsExe = "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe"
-
 if ($WtExe) {
+    # Windows Terminal: new-tab with preferred shell (-NoExit keeps prompt after CLI exits)
     Start-Process -FilePath $WtExe `
-        -ArgumentList "--title `"$WindowTitle`" powershell -NoLogo -NoExit -EncodedCommand $PsCmdEncoded"
+        -ArgumentList "new-tab --title `"$WindowTitle`" -- $ShellName -NoLogo -NoExit -EncodedCommand $PsCmdEncoded"
     exit 0
 }
 
-# Fallback: plain PowerShell window (no wt.exe)
-if (Test-Path $PsExe -PathType Leaf) {
-    Start-Process -FilePath $PsExe -ArgumentList "-NoLogo -NoExit -EncodedCommand $PsCmdEncoded"
+# Fallback: plain shell window (no Windows Terminal found)
+if (Test-Path $ShellExe -PathType Leaf) {
+    Start-Process -FilePath $ShellExe -ArgumentList "-NoLogo -NoExit -EncodedCommand $PsCmdEncoded"
 } else {
     Start-Process -FilePath $CoreExe -ArgumentList ($quotedArgs -join ' ')
 }
