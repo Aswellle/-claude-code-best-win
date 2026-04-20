@@ -25,7 +25,7 @@ if (-not (Test-Path $CoreExe -PathType Leaf)) {
     exit 1
 }
 
-# Parse args: consume --cwd <dir> for the starting directory; forward everything else.
+# Parse args: consume --cwd <dir> for starting directory; forward everything else.
 $quotedArgs = @()
 $CallerDir  = $PWD.Path
 $i = 0
@@ -41,58 +41,55 @@ while ($i -lt $PassArgs.Count) {
     }
 }
 
-# ── Build the wt argument string ──────────────────────────────────────────────
-# Run claude-core.exe DIRECTLY inside Windows Terminal (no PowerShell wrapper).
-# wt: new-tab --startingDirectory <dir> -- <program> [args]
-$safeTitle = $WindowTitle -replace '"', '\"'
-$safeDir   = $CallerDir   -replace '"', '\"'
-$safeExe   = $CoreExe     -replace '"', '\"'
+# ── Find wt.exe (Windows Terminal) ───────────────────────────────────────────
+# IMPORTANT: never use & or Invoke-Expression to call external commands here —
+# ps2exe -noConsole compiles a GUI process; synchronous console-child calls hang.
+# Use only PowerShell-native detection (Get-Command, Test-Path, Get-Item).
 
-$wtArgs = "new-tab --title `"$safeTitle`" --startingDirectory `"$safeDir`" -- `"$safeExe`""
+# Inject WindowsApps into PATH so Get-Command resolves app-execution aliases.
+$waDir = "$env:LOCALAPPDATA\Microsoft\WindowsApps"
+if ($env:PATH -notlike "*$waDir*") { $env:PATH = "$waDir;$env:PATH" }
+
+$WtExe = $null
+
+# 1. PATH / app-execution alias (covers Store and bundled-Win11 installs)
+$WtGcm = Get-Command 'wt.exe' -ErrorAction SilentlyContinue
+if ($WtGcm) { $WtExe = $WtGcm.Source }
+
+# 2. WindowsApps alias path directly (reparse point — no -PathType Leaf)
+if (-not $WtExe) {
+    $p = "$waDir\wt.exe"
+    if (Test-Path $p) { $WtExe = $p }
+}
+
+# 3. Packaged binary under Program Files (side-load / enterprise)
+if (-not $WtExe) {
+    $p = Get-Item "$env:ProgramFiles\WindowsApps\Microsoft.WindowsTerminal*\wt.exe" `
+         -ErrorAction SilentlyContinue | Sort-Object Name -Descending | Select-Object -First 1
+    if ($p) { $WtExe = $p.FullName }
+}
+
+# ── Build wt argument string ──────────────────────────────────────────────────
+# Run claude-core.exe DIRECTLY inside Windows Terminal (no PowerShell wrapper).
+# wt new-tab --startingDirectory <dir> -- <exe> [args]
+$safeDir = $CallerDir -replace '"', '\"'
+$safeExe = $CoreExe   -replace '"', '\"'
+
+# Use the built-in Command Prompt profile (GUID is fixed across all Windows Terminal installs).
+# Omitting --title lets the tab show "命令提示符" / "Command Prompt" from the profile name.
+$cmdPromptGuid = '{0caa0dad-35be-5f56-a8ff-afceeeaa6101}'
+$wtArgs = "new-tab --profile `"$cmdPromptGuid`" --startingDirectory `"$safeDir`" -- `"$safeExe`""
 if ($quotedArgs.Count -gt 0) { $wtArgs += ' ' + ($quotedArgs -join ' ') }
 
-# ── Launch strategy ───────────────────────────────────────────────────────────
-#
-# Windows Terminal is installed in two ways:
-#   A) Store/manual install  → wt.exe appears in PATH via WindowsApps app-execution alias
-#   B) System-bundled (Win11)→ wt.exe only reachable via the WindowsApps alias
-#
-# App-execution aliases are reparse stubs that cmd.exe resolves correctly but
-# Start-Process may not activate from a compiled (ps2exe) GUI context.
-# Strategy: prefer cmd /c wt.exe (always works when WT is installed) over
-# direct Start-Process on the alias path.
-
-$launched = $false
-
-# 1. cmd /c wt.exe — resolves app-execution alias reliably in all contexts
-$testWt = & cmd.exe /c "where wt.exe 2>nul" 2>$null
-if ($LASTEXITCODE -eq 0 -or (Test-Path "$env:LOCALAPPDATA\Microsoft\WindowsApps\wt.exe")) {
-    Start-Process 'cmd.exe' -ArgumentList "/c wt.exe $wtArgs" -WindowStyle Hidden
-    $launched = $true
+# ── Launch ────────────────────────────────────────────────────────────────────
+if ($WtExe) {
+    # Start-Process uses ShellExecute internally, which correctly activates
+    # app-execution aliases without needing cmd.exe as an intermediary.
+    Start-Process -FilePath $WtExe -ArgumentList $wtArgs
+    exit 0
 }
 
-# 2. Direct path from Get-Command (PATH lookup, non-alias installs)
-if (-not $launched) {
-    $WtGcm = Get-Command 'wt.exe' -ErrorAction SilentlyContinue
-    if ($WtGcm) {
-        Start-Process -FilePath $WtGcm.Source -ArgumentList $wtArgs
-        $launched = $true
-    }
-}
-
-# 3. Packaged app under Program Files (side-load / enterprise installs)
-if (-not $launched) {
-    $wtPf = Get-Item "$env:ProgramFiles\WindowsApps\Microsoft.WindowsTerminal*\wt.exe" `
-            -ErrorAction SilentlyContinue | Sort-Object Name -Descending | Select-Object -First 1
-    if ($wtPf) {
-        Start-Process -FilePath $wtPf.FullName -ArgumentList $wtArgs
-        $launched = $true
-    }
-}
-
-if ($launched) { exit 0 }
-
-# ── Fallback: Windows Terminal not found — open in OS default terminal ────────
+# Fallback: Windows Terminal not found — open directly in OS default terminal
 if ($quotedArgs.Count -gt 0) {
     Start-Process -FilePath $CoreExe -WorkingDirectory $CallerDir -ArgumentList ($quotedArgs -join ' ')
 } else {
